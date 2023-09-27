@@ -1,0 +1,30 @@
+Sisse:
+    track:<string>
+    Angle:<string>
+    MinZone:<string>
+    MaxZone:<string>
+    Error:<string>
+    P:<string>
+    I:<string>
+    D:<string>
+    Speed:<string>
+    Status:<string>
+    data:<string> format: data:x0,y0;x1,x1;.....;xn,yn/a0,b0;a1,b1;.....;an,bn/k0;k1;k2....k23
+
+Välja:
+    Käsud:
+        "off" -> Mootor sisse
+        "on" -> Mootor välja
+        "startup" -> 5sek delay KIT-ga ja siis kõik tööle, võistluste jaoks
+        "SOff" -> Servo välja
+        "SOn" -> Servo sisse
+
+    Parameetrid (float väärtused):
+        "Speed:" + slider.getValue();
+        "Speed_P:" + slider.getValue();
+        "Speed_I:" + slider.getValue();
+        "Speed_D:" + slider.getValue();
+        "Turn_P:" + slider.getValue();
+        "Turn_I:" + slider.getValue();
+        "Turn_D:" + slider.getValue();
+
