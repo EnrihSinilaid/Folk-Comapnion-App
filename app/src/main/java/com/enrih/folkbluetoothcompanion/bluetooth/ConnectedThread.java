@@ -34,7 +34,7 @@ public class ConnectedThread extends Thread {
     }
 
     public void run() {
-        byte[] buffer = new byte[1024];  // buffer store for the stream
+        byte[] buffer = new byte[4096];  // buffer store for the stream
         int bytes = 0; // bytes returned from read()
         // Keep listening to the InputStream until an exception occurs
         while (true) {
@@ -64,12 +64,12 @@ public class ConnectedThread extends Thread {
     /* Call this from the main activity to send data to the remote device */
     public void write(String input) {
         byte[] bytes = input.getBytes(); //converts entered String into bytes
-        try {
+        /*try {
             mmOutStream.write(bytes);
         } catch (IOException e) {
             Log.e("Send Error","Unable to send message",e);
             cancel();
-        }
+        }*/
     }
 
     /* Call this from the main activity to shutdown the connection */

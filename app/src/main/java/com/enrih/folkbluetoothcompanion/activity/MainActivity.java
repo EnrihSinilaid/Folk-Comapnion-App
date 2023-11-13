@@ -87,8 +87,10 @@ public class MainActivity extends AppCompatActivity {
     private int viewSwitch = 0;
     private boolean settings = false;
 
-    Button button1, button2, button3, button4, button5, button6, buttonConnect, buttonSettings, buttonSaveSettings, buttonData, buttonConsole, buttonMod;
-    TextView textViewSpeedL, textViewSpeedR, textViewStatus, textViewTrackAngle, textViewP, textViewI, textViewD, textViewMax, textViewMin, contentSwitch;
+    private boolean motorSwitchFront = false;
+
+    Button button1, button2, button3, button4, button5, button6, buttonConnect, buttonSettings, buttonSaveSettings, buttonData, buttonConsole, buttonMod, buttonMotorSwitch;
+    TextView textViewSpeedL, textViewSpeedR, textViewStatus, textViewTrackAngle, textViewPSpeedF, textViewISpeedF, textViewDSpeedF, textViewPSpeedB, textViewISpeedB, textViewDSpeedB, textViewP, textViewI, textViewD, textViewMax, textViewMin, contentSwitch;
     EditText pSpeed, iSpeed, dSpeed, pTurn, iTurn, dTurn, pSpeedStep, iSpeedStep, dSpeedStep, pTurnStep, iTurnStep, dTurnStep;
     Slider sliderSpeed, sliderSpeedP, sliderSpeedI, sliderSpeedD, sliderTurnP, sliderTurnI, sliderTurnD;
     Toolbar toolbar;
@@ -126,7 +128,9 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("BT MESSAGE", arduinoMsg);
                     if (arduinoMsg.contains("PDC:")) {
                         textViewTrackAngle.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("SpeedL:")) {
+                    } else if (arduinoMsg.contains("SpeedF:")) {
+                        textViewSpeedR.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("SpeedB:")) {
                         textViewSpeedL.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
                     } else if (arduinoMsg.contains("Time:")) {
                         textViewMin.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
@@ -136,11 +140,25 @@ public class MainActivity extends AppCompatActivity {
                         /*else if (arduinoMsg.contains("Error:")){
                             textViewStatus.setText(arduinoMsg.substring(arduinoMsg.indexOf(":")));
                         }*/
-                    else if (arduinoMsg.contains("P:")) {
+                    else if (arduinoMsg.contains("PF:")) {
+                        textViewPSpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("IF:")) {
+                        textViewISpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("DF:")) {
+                        textViewDSpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    }
+                    else if (arduinoMsg.contains("PB:")) {
+                        textViewPSpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("IB:")) {
+                        textViewISpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("DB:")) {
+                        textViewDSpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    }
+                    else if (arduinoMsg.contains("Turn_P:")) {
                         textViewP.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("I:")) {
-                        textViewP.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("D:")) {
+                    } else if (arduinoMsg.contains("Turn_I:")) {
+                        textViewI.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("Turn_D:")) {
                         textViewD.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
                     } else if (arduinoMsg.contains("SpeedR:")) {
                         //sliderSpeed.setValue(Float.parseFloat(arduinoMsg.substring(arduinoMsg.indexOf(":"))));
@@ -411,6 +429,16 @@ public class MainActivity extends AppCompatActivity {
             isDefault = !isDefault;
         });
 
+        buttonMotorSwitch.setOnClickListener(view -> {
+            if (motorSwitchFront){
+                buttonMotorSwitch.setText("Back   PID");
+            }
+            else {
+                buttonMotorSwitch.setText("Front PID");
+            }
+            motorSwitchFront = !motorSwitchFront;
+        });
+
         button5.setOnClickListener(view -> {
             if (isSOn){
                 button5.setText("Serv. On");
@@ -646,12 +674,19 @@ public class MainActivity extends AppCompatActivity {
         button6 = findViewById(R.id.button6);
         buttonSettings = findViewById(R.id.button_settings);
         buttonSaveSettings = findViewById(R.id.buttonSaveSettings);
+        buttonMotorSwitch = findViewById(R.id.motorSwitchButton);
 
         /*TextViews*/
         textViewSpeedL = findViewById(R.id.textView_speed_L_value);
         textViewSpeedR = findViewById(R.id.textView_speed_value);
         textViewStatus = findViewById(R.id.textView_status_value);
         textViewTrackAngle = findViewById(R.id.textView_angle_value);
+        textViewPSpeedF = findViewById(R.id.textView_P_value_Speed_F);
+        textViewISpeedF = findViewById(R.id.textView_I_value_Speed_F);
+        textViewDSpeedF = findViewById(R.id.textView_D_value_Speed_F);
+        textViewPSpeedB = findViewById(R.id.textView_P_value_Speed_B);
+        textViewISpeedB = findViewById(R.id.textView_I_value_Speed_B);
+        textViewDSpeedB = findViewById(R.id.textView_D_value_Speed_B);
         textViewP = findViewById(R.id.textView_P_value);
         textViewI = findViewById(R.id.textView_I_value);
         textViewD = findViewById(R.id.textView_D_value);
@@ -822,7 +857,7 @@ public class MainActivity extends AppCompatActivity {
 
         graph2 = findViewById(R.id.graph2);
         graph2.getViewport().setXAxisBoundsManual(true);
-        graph2.getViewport().setMinX(-1.65);
+        graph2.getViewport().setMinX(-1.55);
         graph2.getViewport().setMaxX(1.65);
         graph2.getViewport().setYAxisBoundsManual(true);
         graph2.getViewport().setMinY(-1.65);
@@ -866,15 +901,33 @@ public class MainActivity extends AppCompatActivity {
                 connectedThread.write(cmdText);
             }
             else if (slider.getId() == R.id.slider_speed_P){
-                String cmdText = "Speed_P:" + slider.getValue();
+                String cmdText = "";
+                if (motorSwitchFront){
+                    cmdText = "Speed_P_F:" + slider.getValue();
+                }
+                else {
+                    cmdText = "Speed_P_B:" + slider.getValue();
+                }
                 connectedThread.write(cmdText);
             }
             else if (slider.getId() == R.id.slider_speed_I){
-                String cmdText = "Speed_I:" + slider.getValue();
+                String cmdText = "";
+                if (motorSwitchFront){
+                    cmdText = "Speed_I_F:" + slider.getValue();
+                }
+                else {
+                    cmdText = "Speed_I_B:" + slider.getValue();
+                }
                 connectedThread.write(cmdText);
             }
             else if (slider.getId() == R.id.slider_speed_D){
-                String cmdText = "Speed_D:" + slider.getValue();
+                String cmdText = "";
+                if (motorSwitchFront){
+                    cmdText = "Speed_D_F:" + slider.getValue();
+                }
+                else {
+                    cmdText = "Speed_D_B:" + slider.getValue();
+                }
                 connectedThread.write(cmdText);
             }
             else if (slider.getId() == R.id.slider_turn_P){
