@@ -64,12 +64,12 @@ public class ConnectedThread extends Thread {
     /* Call this from the main activity to send data to the remote device */
     public void write(String input) {
         byte[] bytes = input.getBytes(); //converts entered String into bytes
-        /*try {
+        try {
             mmOutStream.write(bytes);
         } catch (IOException e) {
             Log.e("Send Error","Unable to send message",e);
             cancel();
-        }*/
+        }
     }
 
     /* Call this from the main activity to shutdown the connection */

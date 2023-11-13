@@ -59,8 +59,8 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 
 public class MainActivity extends AppCompatActivity {
 
-    private List<Float> degrees = List.of(-129.375F, -118.125F, -106.875F, -95.625F, -84.375F, -73.125F, -61.875F, -50.625F, -39.375F, -28.125F, -16.875F, -5.625F
-            , 5.625F, 16.875F, 28.125F, 39.375F, 50.625F, 61.875F, 73.125F, 84.375F, 95.625F, 106.875F, 118.125F, 129.375F);
+    private List<Float> degrees = List.of(-106.875F, -95.625F, -84.375F, -73.125F, -61.875F, -50.625F, -39.375F, -28.125F, -16.875F, -5.625F
+            , 5.625F, 16.875F, 28.125F, 39.375F, 50.625F, 61.875F, 73.125F, 84.375F, 95.625F, 106.875F);
 
     private String deviceName = null;
 
