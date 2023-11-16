@@ -6,14 +6,14 @@ plugins {
 
 android {
     namespace 'com.enrih.folkbluetoothcompanion'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.enrih.folkbluetoothcompanion"
         minSdk 29
-        targetSdk 34
+        targetSdk 33
         versionCode 1
-        versionName "2.1"
+        versionName "2.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -36,10 +36,10 @@ android {
 dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.navigation:navigation-fragment:2.7.5'
-    implementation 'androidx.navigation:navigation-ui:2.7.5'
+    implementation 'androidx.navigation:navigation-fragment:2.5.3'
+    implementation 'androidx.navigation:navigation-ui:2.5.3'
     implementation 'com.github.lucasjodon:AndroidJoyStickView:upstream_fixes-SNAPSHOT'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
     implementation 'com.jjoe64:graphview:4.2.2'

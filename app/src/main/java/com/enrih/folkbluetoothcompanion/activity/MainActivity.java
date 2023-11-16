@@ -17,8 +17,6 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
@@ -59,40 +57,32 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 
 public class MainActivity extends AppCompatActivity {
 
-    private List<Float> degrees = List.of(-106.875F, -95.625F, -84.375F, -73.125F, -61.875F, -50.625F, -39.375F, -28.125F, -16.875F, -5.625F
+    private final List<Float> degrees = List.of(-106.875F, -95.625F, -84.375F, -73.125F, -61.875F, -50.625F, -39.375F, -28.125F, -16.875F, -5.625F
             , 5.625F, 16.875F, 28.125F, 39.375F, 50.625F, 61.875F, 73.125F, 84.375F, 95.625F, 106.875F);
-
     private String deviceName = null;
 
     public boolean connected = false;
     public boolean detached = false;
     SharedPreferences settingsSP;
+    SharedPreferences PIDValuesSP;
     private String deviceAddress;
-    //public static Handler handler;
-
     public static CreateConnectThread createConnectThread;
-
     private double lastAngle = 0;
     private double lastSpeed = 0;
-
     private boolean isReverse = false;
     private boolean isOn = false;
+    private boolean isConnected = false;
     private boolean isSOn = true;
-
     private boolean isDataOn = true;
     private boolean isConsoleOn = true;
-
     private boolean isDefault = true;
-
     private int viewSwitch = 0;
     private boolean settings = false;
-
-    private boolean motorSwitchFront = false;
-
-    Button button1, button2, button3, button4, button5, button6, buttonConnect, buttonSettings, buttonSaveSettings, buttonData, buttonConsole, buttonMod, buttonMotorSwitch;
+    private int SwitchPID = 0;
+    Button button1, button2, button3, button4, button5, button6, buttonConnect, buttonSettings, buttonSaveSettings, buttonData, buttonConsole, buttonMod, buttonSwitchPID;
     TextView textViewSpeedL, textViewSpeedR, textViewStatus, textViewTrackAngle, textViewPSpeedF, textViewISpeedF, textViewDSpeedF, textViewPSpeedB, textViewISpeedB, textViewDSpeedB, textViewP, textViewI, textViewD, textViewMax, textViewMin, contentSwitch;
-    EditText pSpeed, iSpeed, dSpeed, pTurn, iTurn, dTurn, pSpeedStep, iSpeedStep, dSpeedStep, pTurnStep, iTurnStep, dTurnStep;
-    Slider sliderSpeed, sliderSpeedP, sliderSpeedI, sliderSpeedD, sliderTurnP, sliderTurnI, sliderTurnD;
+    EditText pMaxEdit, pMinEdit, pStepEdit, iMaxEdit, iMinEdit, iStepEdit, dMaxEdit, dMinEdit, dSpeedEdit, maxPidMaxEdit, maxPidMinEdit, maxPidStepEdit, minPidMaxEdit, minPidMinEdit, minPidStepEdit, maxiPidMaxEdit, maxiPidMinEdit, maxiPidStepEdit;
+    Slider sliderSpeed, sliderP, sliderI, sliderD, sliderPIDMax, sliderPIDMin, sliderMaxI;
     Toolbar toolbar;
     ProgressBar progressBar;
     LinearLayout layoutControls;
@@ -100,173 +90,28 @@ public class MainActivity extends AppCompatActivity {
     FrameLayout layoutLine, layoutRadar;
     LineChart lineChart;
     LineChartCustom radarChart;
-
     GraphView graph1, graph2;
-
-    private class BluetoothHandler extends Handler {
-        private final WeakReference<MainActivity> mActivity;
-
-        public BluetoothHandler(MainActivity activity){
-            mActivity = new WeakReference<MainActivity>(activity);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            MainActivity activity = mActivity.get();
-            if (activity != null) {
-                if (msg.what == CONNECTING_STATUS.getCode()) {
-                    if (msg.arg1 == 1) {
-                        Log.e("Bluetooth", "in run connected");
-                        activity.toolbar.setSubtitle("Connected to " + deviceName);
-                    } else if (msg.arg1 == -1) {
-                        toolbar.setSubtitle("Device fails to connect");
-                    }
-                    progressBar.setVisibility(View.GONE);
-                    buttonConnect.setEnabled(true);
-                } else if (msg.what == MESSAGE_READ.getCode()) {
-                    String arduinoMsg = msg.obj.toString();
-                    Log.d("BT MESSAGE", arduinoMsg);
-                    if (arduinoMsg.contains("PDC:")) {
-                        textViewTrackAngle.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("SpeedF:")) {
-                        textViewSpeedR.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("SpeedB:")) {
-                        textViewSpeedL.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("Time:")) {
-                        textViewMin.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("Error:")) {
-                        textViewMax.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    }
-                        /*else if (arduinoMsg.contains("Error:")){
-                            textViewStatus.setText(arduinoMsg.substring(arduinoMsg.indexOf(":")));
-                        }*/
-                    else if (arduinoMsg.contains("PF:")) {
-                        textViewPSpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("IF:")) {
-                        textViewISpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("DF:")) {
-                        textViewDSpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    }
-                    else if (arduinoMsg.contains("PB:")) {
-                        textViewPSpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("IB:")) {
-                        textViewISpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("DB:")) {
-                        textViewDSpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    }
-                    else if (arduinoMsg.contains("Turn_P:")) {
-                        textViewP.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("Turn_I:")) {
-                        textViewI.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("Turn_D:")) {
-                        textViewD.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("SpeedR:")) {
-                        //sliderSpeed.setValue(Float.parseFloat(arduinoMsg.substring(arduinoMsg.indexOf(":"))));
-                        textViewSpeedR.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("Status:")) {
-                        //sliderSpeed.setValue(Float.parseFloat(arduinoMsg.substring(arduinoMsg.indexOf(":"))));
-                        textViewStatus.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
-                    } else if (arduinoMsg.contains("data:")) {
-                        try {
-                            String data = arduinoMsg.substring(arduinoMsg.indexOf(":") + 1);
-                            ArrayList<ArrayList<Entry>> linePoints = new ArrayList<>();
-                            ArrayList<ArrayList<Entry>> radarPoints = new ArrayList<>();
-
-                            ArrayList<DataPoint[]> valueLinePoints = new ArrayList<>();
-                            ArrayList<DataPoint[]> valueRadarPoints = new ArrayList<>();
-
-                            ArrayList<String> datasets = new ArrayList<>(List.of(data.split("/")));
-                            int dataMode = 0;
-                            for (String dataset : datasets) {
-                                if (dataset.isEmpty()) {
-                                    break;
-                                }
-                                ArrayList<Entry> dataPointsLine = new ArrayList<>();
-                                ArrayList<Entry> dataPointsRadar = new ArrayList<>();
-                                ArrayList<String> points = new ArrayList<>(List.of(dataset.split(";")));
-
-                                DataPoint[] valuesLine = new DataPoint[points.size()];
-                                DataPoint[] valuesRadar = new DataPoint[points.size()];
-
-                                int counter = 0;
-                                for (String point : points) {
-                                    if (dataMode == 2 && viewSwitch == 2) {
-
-                                        float y = Float.parseFloat(point);
-                                        List<Float> transformedPoints = radarTransformer(y, degrees.get(counter));
-
-                                        DataPoint r = new DataPoint(transformedPoints.get(0), transformedPoints.get(1));
-                                        valuesRadar[counter] = r;
-                                    } else if (dataMode != 2 && viewSwitch == 1) {
-                                        float x = Float.parseFloat(point.split(",")[0]);
-                                        float y = Float.parseFloat(point.split(",")[1]);
-
-
-                                        DataPoint l = new DataPoint(x, y);
-                                        valuesLine[counter] = l;
-
-                                        Entry entryLine = new Entry(x, y);
-                                        dataPointsLine.add(entryLine);
-
-                                    }
-                                    counter++;
-                                }
-                                linePoints.add(dataPointsLine);
-
-                                if (dataMode == 2) {
-                                    valueRadarPoints.add(valuesRadar);
-                                }
-                                valueLinePoints.add(valuesLine);
-                                dataMode++;
-                            }
-                            if (viewSwitch == 1) {
-                                setUpChart(linePoints);
-                            } else {
-                                setUpGraph(valueLinePoints, valueRadarPoints);
-                            }
-
-                        } catch (Exception e) {
-
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private final BluetoothHandler handler = new BluetoothHandler(this);
+    private final String[] requiredPermissions = {
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_ADVERTISE
+    };
 
-
-    @RequiresApi(api = Build.VERSION_CODES.S)
-    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         settingsSP = this.getSharedPreferences("settings", 0);
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
-            requestPermissions(new String[] {Manifest.permission.BLUETOOTH,
-                                            Manifest.permission.BLUETOOTH_ADMIN,
-                                            Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                                            Manifest.permission.BLUETOOTH_SCAN,
-                                            Manifest.permission.BLUETOOTH_CONNECT,
-                                            Manifest.permission.ACCESS_BACKGROUND_LOCATION
-
-                    },
-                    PERMISSIONS_REQUEST_CODE.getCode());
-
+        PIDValuesSP = this.getSharedPreferences("PID", 0);
+        List<String> missingPermissions = hasPermissions(this, requiredPermissions);
+        if(!missingPermissions.isEmpty()){
+            requestPermissions(missingPermissions.toArray(new String[0]), 100);
         }
-
         // UI Initialization
         initUI();
 
@@ -350,32 +195,32 @@ public class MainActivity extends AppCompatActivity {
         button1.setOnClickListener(view -> {
             if (isOn){
                 button1.setText("On");
-                connectedThread.write("off");
+                sendData("off");
             }
             else {
                 button1.setText("Off");
-                connectedThread.write("on");
+                sendData("on");
             }
             isOn = !isOn;
         });
 
         button2.setOnClickListener(view -> {
             String cmdText = "startup";
-            connectedThread.write(cmdText);
+            sendData(cmdText);
             button1.setText("Off");
             isOn = true;
         });
 
         button3.setOnClickListener(view -> {
             String cmdText = "startupL";
-            connectedThread.write(cmdText);
+            sendData(cmdText);
             button1.setText("Off");
             isOn = true;
         });
 
         button4.setOnClickListener(view -> {
             String cmdText = "startupR";
-            connectedThread.write(cmdText);
+            sendData(cmdText);
             button1.setText("Off");
             isOn = true;
         });
@@ -384,11 +229,11 @@ public class MainActivity extends AppCompatActivity {
         button3.setOnClickListener(view -> {
             if (isReverse){
                 button3.setText("Forward");
-                connectedThread.write("reverse");
+                sendData("reverse");
             }
             else {
                 button3.setText("Reverse");
-                connectedThread.write("forward");
+                sendData("forward");
             }
             isReverse = !isReverse;
         });*/
@@ -396,11 +241,11 @@ public class MainActivity extends AppCompatActivity {
         buttonData.setOnClickListener(view -> {
             if (isDataOn){
                 buttonData.setText("Data On ");
-                connectedThread.write("dataOff");
+                sendData("dataOff");
             }
             else {
                 buttonData.setText("Data Off");
-                connectedThread.write("dataOn");
+                sendData("dataOn");
             }
             isDataOn = !isDataOn;
         });
@@ -408,11 +253,11 @@ public class MainActivity extends AppCompatActivity {
         buttonConsole.setOnClickListener(view -> {
             if (isConsoleOn){
                 buttonConsole.setText("Console On ");
-                connectedThread.write("printOff");
+                sendData("printOff");
             }
             else {
                 buttonConsole.setText("Console Off");
-                connectedThread.write("printOn");
+                sendData("printOn");
             }
             isConsoleOn = !isConsoleOn;
         });
@@ -420,33 +265,65 @@ public class MainActivity extends AppCompatActivity {
         buttonMod.setOnClickListener(view -> {
             if (isDefault){
                 buttonMod.setText("Set Slow");
-                connectedThread.write("MDef");
+                sendData("MDef");
             }
             else {
                 buttonMod.setText("Set Def");
-                connectedThread.write("MSlow");
+                sendData("MSlow");
             }
             isDefault = !isDefault;
         });
 
-        buttonMotorSwitch.setOnClickListener(view -> {
-            if (motorSwitchFront){
-                buttonMotorSwitch.setText("Back   PID");
+        buttonSwitchPID.setOnClickListener(view -> {
+            SharedPreferences.Editor editor = PIDValuesSP.edit();
+            switch(SwitchPID){
+                case 0: {
+                    buttonSwitchPID.setText("Back PID");
+                    SwitchPID = 1;
+                    editor.putFloat("pFSpeed", (sliderP.getValue()));
+                    editor.putFloat("iFSpeed", (sliderI.getValue()));
+                    editor.putFloat("dFSpeed", (sliderD.getValue()));
+                    editor.apply();
+                    sliderP.setValue(PIDValuesSP.getFloat("pBSpeed", settingsSP.getInt("pMin", 10)));
+                    sliderI.setValue(PIDValuesSP.getFloat("iBSpeed", settingsSP.getInt("iMin", 10)));
+                    sliderD.setValue(PIDValuesSP.getFloat("dBSpeed", settingsSP.getInt("dMin", 10)));
+                    break;
+                }
+                case 1: {
+                    buttonSwitchPID.setText("Turn PID");
+                    SwitchPID = 2;
+                    editor.putFloat("pBSpeed", (sliderP.getValue()));
+                    editor.putFloat("iBSpeed", (sliderI.getValue()));
+                    editor.putFloat("dBSpeed", (sliderD.getValue()));
+                    editor.apply();
+                    sliderP.setValue(PIDValuesSP.getFloat("pTurn", settingsSP.getInt("pMin", 10)));
+                    sliderI.setValue(PIDValuesSP.getFloat("iTurn", settingsSP.getInt("iMin", 10)));
+                    sliderD.setValue(PIDValuesSP.getFloat("dTurn", settingsSP.getInt("dMin", 10)));
+                    break;
+                }
+                case 2:{
+                    buttonSwitchPID.setText("Front PID");
+                    SwitchPID = 0;
+                    editor.putFloat("pTurn", (sliderP.getValue()));
+                    editor.putFloat("iTurn", (sliderI.getValue()));
+                    editor.putFloat("dTurn", (sliderD.getValue()));
+                    editor.apply();
+                    sliderP.setValue(PIDValuesSP.getFloat("pFSpeed", settingsSP.getInt("pMin", 10)));
+                    sliderI.setValue(PIDValuesSP.getFloat("iFSpeed", settingsSP.getInt("iMin", 10)));
+                    sliderD.setValue(PIDValuesSP.getFloat("dFSpeed", settingsSP.getInt("dMin", 10)));
+                    break;
+                }
             }
-            else {
-                buttonMotorSwitch.setText("Front PID");
-            }
-            motorSwitchFront = !motorSwitchFront;
         });
 
         button5.setOnClickListener(view -> {
             if (isSOn){
                 button5.setText("Serv. On");
-                connectedThread.write("SOff");
+                sendData("SOff");
             }
             else {
                 button5.setText("Serv. Off");
-                connectedThread.write("SOn");
+                sendData("SOn");
             }
             isSOn = !isSOn;
         });
@@ -454,7 +331,7 @@ public class MainActivity extends AppCompatActivity {
         button6.setOnClickListener(view -> {
             if (createConnectThread != null){
                 String cmdText = "Disconnect\r\n";
-                connectedThread.write(cmdText);
+                sendData(cmdText);
                 createConnectThread.cancel();
                 toolbar.setSubtitle("Disconnected!");
                 connected = false;
@@ -463,73 +340,107 @@ public class MainActivity extends AppCompatActivity {
         });
         buttonSaveSettings.setOnClickListener(view -> {
             SharedPreferences.Editor editor = settingsSP.edit();
-            if (pSpeed.getText().length() > 0){
-                sliderSpeedP.setValueTo(Integer.parseInt(pSpeed.getText().toString()));
-                pSpeed.setText(pSpeed.getText().toString());
-                editor.putInt("pSpeed", Integer.parseInt(pSpeed.getText().toString()));
+            if (pMaxEdit.getText().length() > 0){
+                sliderP.setValueTo(Integer.parseInt(pMaxEdit.getText().toString()));
+                pMaxEdit.setText(pMaxEdit.getText().toString());
+                editor.putInt("pMax", Integer.parseInt(pMaxEdit.getText().toString()));
             }
-            if (iSpeed.getText().length() > 0){
-                sliderSpeedI.setValueTo(Integer.parseInt(iSpeed.getText().toString()));
-                iSpeed.setText(iSpeed.getText().toString());
-                editor.putInt("iSpeed", Integer.parseInt(iSpeed.getText().toString()));
+            if (iMaxEdit.getText().length() > 0){
+                sliderI.setValueTo(Integer.parseInt(iMaxEdit.getText().toString()));
+                iMaxEdit.setText(iMaxEdit.getText().toString());
+                editor.putInt("iMax", Integer.parseInt(iMaxEdit.getText().toString()));
 
             }
-            if (dSpeed.getText().length() > 0){
-                sliderSpeedD.setValueTo(Integer.parseInt(dSpeed.getText().toString()));
-                dSpeed.setText(dSpeed.getText().toString());
-                editor.putInt("dSpeed", Integer.parseInt(dSpeed.getText().toString()));
+            if (dMaxEdit.getText().length() > 0){
+                sliderD.setValueTo(Integer.parseInt(dMaxEdit.getText().toString()));
+                dMaxEdit.setText(dMaxEdit.getText().toString());
+                editor.putInt("dMax", Integer.parseInt(dMaxEdit.getText().toString()));
 
             }
-            if (pSpeedStep.getText().length() > 0){
-                sliderSpeedP.setStepSize(Float.parseFloat(pSpeedStep.getText().toString()));
-                pSpeedStep.setText(pSpeedStep.getText().toString());
-                editor.putFloat("pSpeedStep", Float.parseFloat(pSpeedStep.getText().toString()));
+            if (pMinEdit.getText().length() > 0){
+                sliderP.setValueFrom(Integer.parseInt(pMinEdit.getText().toString()));
+                pMinEdit.setText(pMinEdit.getText().toString());
+                editor.putInt("pMin", Integer.parseInt(pMinEdit.getText().toString()));
             }
-            if (iSpeedStep.getText().length() > 0){
-                sliderSpeedI.setStepSize(Float.parseFloat(iSpeedStep.getText().toString()));
-                iSpeedStep.setText(iSpeedStep.getText().toString());
-                editor.putFloat("iSpeedStep", Float.parseFloat(iSpeedStep.getText().toString()));
+            if (iMinEdit.getText().length() > 0){
+                sliderI.setValueFrom(Integer.parseInt(iMinEdit.getText().toString()));
+                iMinEdit.setText(iMinEdit.getText().toString());
+                editor.putInt("iMin", Integer.parseInt(iMinEdit.getText().toString()));
 
             }
-            if (dSpeedStep.getText().length() > 0){
-                sliderSpeedD.setStepSize(Float.parseFloat(dSpeedStep.getText().toString()));
-                dSpeedStep.setText(dSpeedStep.getText().toString());
-                editor.putFloat("dSpeedStep", Float.parseFloat(dSpeedStep.getText().toString()));
+            if (dMinEdit.getText().length() > 0){
+                sliderD.setValueFrom(Integer.parseInt(dMinEdit.getText().toString()));
+                dMinEdit.setText(dMinEdit.getText().toString());
+                editor.putInt("dMin", Integer.parseInt(dMinEdit.getText().toString()));
 
             }
-            if (pTurn.getText().length() > 0){
-                sliderTurnP.setValueTo(Integer.parseInt(pTurn.getText().toString()));
-                pTurn.setText(pTurn.getText().toString());
-                editor.putInt("pTurn", Integer.parseInt(pTurn.getText().toString()));
+            if (pStepEdit.getText().length() > 0){
+                sliderP.setStepSize(Float.parseFloat(pStepEdit.getText().toString()));
+                pStepEdit.setText(pStepEdit.getText().toString());
+                editor.putFloat("pStep", Float.parseFloat(pStepEdit.getText().toString()));
+            }
+            if (iStepEdit.getText().length() > 0){
+                sliderI.setStepSize(Float.parseFloat(iStepEdit.getText().toString()));
+                iStepEdit.setText(iStepEdit.getText().toString());
+                editor.putFloat("iStep", Float.parseFloat(iStepEdit.getText().toString()));
 
             }
-            if (iTurn.getText().length() > 0){
-                sliderTurnI.setValueTo(Integer.parseInt(iTurn.getText().toString()));
-                iTurn.setText(iTurn.getText().toString());
-                editor.putInt("iTurn", Integer.parseInt(iTurn.getText().toString()));
+            if (dSpeedEdit.getText().length() > 0){
+                sliderD.setStepSize(Float.parseFloat(dSpeedEdit.getText().toString()));
+                dSpeedEdit.setText(dSpeedEdit.getText().toString());
+                editor.putFloat("dStep", Float.parseFloat(dSpeedEdit.getText().toString()));
 
             }
-            if (dTurn.getText().length() > 0){
-                sliderTurnD.setValueTo(Integer.parseInt(dTurn.getText().toString()));
-                dTurn.setText(dTurn.getText().toString());
-                editor.putInt("dTurn", Integer.parseInt(dTurn.getText().toString()));
-            }
-            if (pTurnStep.getText().length() > 0){
-                sliderTurnP.setStepSize(Float.parseFloat(pTurnStep.getText().toString()));
-                pTurnStep.setText(pTurnStep.getText().toString());
-                editor.putFloat("pTurnStep", Float.parseFloat(pTurnStep.getText().toString()));
+            if (maxPidMaxEdit.getText().length() > 0){
+                sliderPIDMax.setValueTo(Integer.parseInt(maxPidMaxEdit.getText().toString()));
+                maxPidMaxEdit.setText(maxPidMaxEdit.getText().toString());
+                editor.putInt("maxPidMax", Integer.parseInt(maxPidMaxEdit.getText().toString()));
 
             }
-            if (iTurnStep.getText().length() > 0){
-                sliderTurnI.setStepSize(Float.parseFloat(iTurnStep.getText().toString()));
-                iTurnStep.setText(iTurnStep.getText().toString());
-                editor.putFloat("iTurnStep", Float.parseFloat(iTurnStep.getText().toString()));
+            if (minPidMaxEdit.getText().length() > 0){
+                sliderPIDMin.setValueTo(Integer.parseInt(minPidMaxEdit.getText().toString()));
+                minPidMaxEdit.setText(minPidMaxEdit.getText().toString());
+                editor.putInt("minPidMax", Integer.parseInt(minPidMaxEdit.getText().toString()));
 
             }
-            if (dTurnStep.getText().length() > 0){
-                sliderTurnD.setStepSize(Float.parseFloat(dTurnStep.getText().toString()));
-                dTurnStep.setText(dTurnStep.getText().toString());
-                editor.putFloat("dTurnStep", Float.parseFloat(dTurnStep.getText().toString()));
+            if (maxiPidMaxEdit.getText().length() > 0){
+                sliderMaxI.setValueTo(Integer.parseInt(maxiPidMaxEdit.getText().toString()));
+                maxiPidMaxEdit.setText(maxiPidMaxEdit.getText().toString());
+                editor.putInt("maxiPidMax", Integer.parseInt(maxiPidMaxEdit.getText().toString()));
+            }
+            if (maxPidMinEdit.getText().length() > 0){
+                sliderPIDMax.setValueFrom(Integer.parseInt(maxPidMinEdit.getText().toString()));
+                maxPidMinEdit.setText(maxPidMinEdit.getText().toString());
+                editor.putInt("maxPidMin", Integer.parseInt(maxPidMinEdit.getText().toString()));
+
+            }
+            if (minPidMinEdit.getText().length() > 0){
+                sliderPIDMin.setValueFrom(Integer.parseInt(minPidMinEdit.getText().toString()));
+                minPidMinEdit.setText(minPidMinEdit.getText().toString());
+                editor.putInt("minPidMin", Integer.parseInt(minPidMinEdit.getText().toString()));
+
+            }
+            if (maxiPidMinEdit.getText().length() > 0){
+                sliderMaxI.setValueFrom(Integer.parseInt(maxiPidMinEdit.getText().toString()));
+                maxiPidMinEdit.setText(maxiPidMinEdit.getText().toString());
+                editor.putInt("maxiPidMin", Integer.parseInt(maxiPidMinEdit.getText().toString()));
+            }
+            if (maxPidStepEdit.getText().length() > 0){
+                sliderPIDMax.setStepSize(Float.parseFloat(maxPidStepEdit.getText().toString()));
+                maxPidStepEdit.setText(maxPidStepEdit.getText().toString());
+                editor.putFloat("maxiPidStep", Float.parseFloat(maxPidStepEdit.getText().toString()));
+
+            }
+            if (minPidStepEdit.getText().length() > 0){
+                sliderPIDMin.setStepSize(Float.parseFloat(minPidStepEdit.getText().toString()));
+                minPidStepEdit.setText(minPidStepEdit.getText().toString());
+                editor.putFloat("minPidStep", Float.parseFloat(minPidStepEdit.getText().toString()));
+
+            }
+            if (maxiPidStepEdit.getText().length() > 0){
+                sliderMaxI.setStepSize(Float.parseFloat(maxiPidStepEdit.getText().toString()));
+                maxiPidStepEdit.setText(maxiPidStepEdit.getText().toString());
+                editor.putFloat("maxiPidStep", Float.parseFloat(maxiPidStepEdit.getText().toString()));
             }
             editor.apply();
             dismissKeyboard(this);
@@ -674,7 +585,7 @@ public class MainActivity extends AppCompatActivity {
         button6 = findViewById(R.id.button6);
         buttonSettings = findViewById(R.id.button_settings);
         buttonSaveSettings = findViewById(R.id.buttonSaveSettings);
-        buttonMotorSwitch = findViewById(R.id.motorSwitchButton);
+        buttonSwitchPID = findViewById(R.id.buttonPIDSwitch);
 
         /*TextViews*/
         textViewSpeedL = findViewById(R.id.textView_speed_L_value);
@@ -701,82 +612,118 @@ public class MainActivity extends AppCompatActivity {
         sliderSpeed = findViewById(R.id.slider_speed);
         sliderSpeed.addOnChangeListener(changeListener);
         sliderSpeed.addOnSliderTouchListener(touchListener);
-        sliderSpeedP = findViewById(R.id.slider_speed_P);
-        sliderSpeedP.addOnChangeListener(changeListener);
-        sliderSpeedP.addOnSliderTouchListener(touchListener);
-        sliderSpeedI = findViewById(R.id.slider_speed_I);
-        sliderSpeedI.addOnChangeListener(changeListener);
-        sliderSpeedI.addOnSliderTouchListener(touchListener);
-        sliderSpeedD = findViewById(R.id.slider_speed_D);
-        sliderSpeedD.addOnChangeListener(changeListener);
-        sliderSpeedD.addOnSliderTouchListener(touchListener);
-        sliderTurnP = findViewById(R.id.slider_turn_P);
-        sliderTurnP.addOnSliderTouchListener(touchListener);
-        sliderTurnI = findViewById(R.id.slider_turn_I);
-        sliderTurnI.addOnSliderTouchListener(touchListener);
-        sliderTurnD = findViewById(R.id.slider_turn_D);
-        sliderTurnD.addOnSliderTouchListener(touchListener);
+        sliderP = findViewById(R.id.slider_P);
+        sliderP.addOnChangeListener(changeListener);
+        sliderP.addOnSliderTouchListener(touchListener);
+        sliderI = findViewById(R.id.slider_I);
+        sliderI.addOnChangeListener(changeListener);
+        sliderI.addOnSliderTouchListener(touchListener);
+        sliderD = findViewById(R.id.slider_D);
+        sliderD.addOnChangeListener(changeListener);
+        sliderD.addOnSliderTouchListener(touchListener);
+        sliderPIDMax = findViewById(R.id.slider_max);
+        sliderPIDMax.addOnSliderTouchListener(touchListener);
+        sliderPIDMin = findViewById(R.id.slider_min);
+        sliderPIDMin.addOnSliderTouchListener(touchListener);
+        sliderMaxI = findViewById(R.id.slider_max_i);
+        sliderMaxI.addOnSliderTouchListener(touchListener);
 
         /*EditText*/
-        pSpeed = findViewById(R.id.number_speed_P);
-        if (settingsSP.contains("pSpeed")) {
-            pSpeed.setText(String.valueOf(settingsSP.getInt("pSpeed", 10)));
-            sliderSpeedP.setValueTo(settingsSP.getInt("pSpeed", 10));
+        pMaxEdit = findViewById(R.id.number_P_max);
+        if (settingsSP.contains("pMax")) {
+            pMaxEdit.setText(String.valueOf(settingsSP.getInt("pMax", 10)));
+            sliderP.setValueTo(settingsSP.getInt("pMax", 10));
         }
-        iSpeed = findViewById(R.id.number_speed_I);
-        if (settingsSP.contains("iSpeed")) {
-            iSpeed.setText(String.valueOf(settingsSP.getInt("iSpeed", 10)));
-            sliderSpeedI.setValueTo(settingsSP.getInt("iSpeed", 10));
+        iMaxEdit = findViewById(R.id.number_I_max);
+        if (settingsSP.contains("iMax")) {
+            iMaxEdit.setText(String.valueOf(settingsSP.getInt("iMax", 10)));
+            sliderI.setValueTo(settingsSP.getInt("iMax", 10));
         }
-        dSpeed = findViewById(R.id.number_speed_D);
-        if (settingsSP.contains("dSpeed")) {
-            dSpeed.setText(String.valueOf(settingsSP.getInt("dSpeed", 10)));
-            sliderSpeedD.setValueTo(settingsSP.getInt("dSpeed", 10));
+        dMaxEdit = findViewById(R.id.number_D_max);
+        if (settingsSP.contains("dMax")) {
+            dMaxEdit.setText(String.valueOf(settingsSP.getInt("dMax", 10)));
+            sliderD.setValueTo(settingsSP.getInt("dMax", 10));
         }
-        pSpeedStep = findViewById(R.id.number_speed_P_step);
-        if (settingsSP.contains("pSpeedStep")) {
-            pSpeedStep.setText(String.valueOf(settingsSP.getFloat("pSpeedStep", 1)));
-            sliderSpeedP.setStepSize(settingsSP.getFloat("pSpeedStep", 1));
+        pMinEdit = findViewById(R.id.number_P_min);
+        if (settingsSP.contains("pMin")) {
+            pMinEdit.setText(String.valueOf(settingsSP.getInt("pMin", 0)));
+            sliderP.setValueFrom(settingsSP.getInt("pMin", 0));
+            sliderP.setValue(settingsSP.getInt("pMin", 0));
         }
-        iSpeedStep = findViewById(R.id.number_speed_I_step);
-        if (settingsSP.contains("iSpeedStep")) {
-            iSpeedStep.setText(String.valueOf(settingsSP.getFloat("iSpeedStep", 1)));
-            sliderSpeedI.setStepSize(settingsSP.getFloat("iSpeedStep", 1));
+        iMinEdit = findViewById(R.id.number_I_min);
+        if (settingsSP.contains("iMin")) {
+            iMinEdit.setText(String.valueOf(settingsSP.getInt("iMin", 0)));
+            sliderI.setValueFrom(settingsSP.getInt("iMin", 0));
+            sliderI.setValue(settingsSP.getInt("iMin", 0));
         }
-        dSpeedStep = findViewById(R.id.number_speed_D_step);
-        if (settingsSP.contains("dSpeedStep")) {
-            dSpeedStep.setText(String.valueOf(settingsSP.getFloat("dSpeedStep", 1)));
-            sliderSpeedD.setStepSize(settingsSP.getFloat("dSpeedStep", 1));
+        dMinEdit = findViewById(R.id.number_D_min);
+        if (settingsSP.contains("dMin")) {
+            dMinEdit.setText(String.valueOf(settingsSP.getInt("dMin", 0)));
+            sliderD.setValueFrom(settingsSP.getInt("dMin", 0));
+            sliderD.setValue(settingsSP.getInt("dMin", 0));
         }
-        pTurn = findViewById(R.id.number_turn_P);
-        if (settingsSP.contains("pTurn")) {
-            pTurn.setText(String.valueOf(settingsSP.getInt("pTurn", 10)));
-            sliderTurnP.setValueTo(settingsSP.getInt("pTurn", 10));
+        pStepEdit = findViewById(R.id.number_P_step);
+        if (settingsSP.contains("pStep")) {
+            pStepEdit.setText(String.valueOf(settingsSP.getFloat("pStep", 1)));
+            sliderP.setStepSize(settingsSP.getFloat("pStep", 1));
         }
-        iTurn = findViewById(R.id.number_turn_I);
-        if (settingsSP.contains("iTurn")) {
-            iTurn.setText(String.valueOf(settingsSP.getInt("iTurn", 10)));
-            sliderTurnI.setValueTo(settingsSP.getInt("iTurn", 10));
+        iStepEdit = findViewById(R.id.number_I_step);
+        if (settingsSP.contains("iStep")) {
+            iStepEdit.setText(String.valueOf(settingsSP.getFloat("iStep", 1)));
+            sliderI.setStepSize(settingsSP.getFloat("iStep", 1));
         }
-        dTurn = findViewById(R.id.number_turn_D);
-        if (settingsSP.contains("dTurn")) {
-            dTurn.setText(String.valueOf(settingsSP.getInt("dTurn", 10)));
-            sliderTurnD.setValueTo(settingsSP.getInt("dTurn", 10));
+        dSpeedEdit = findViewById(R.id.number_D_step);
+        if (settingsSP.contains("dStep")) {
+            dSpeedEdit.setText(String.valueOf(settingsSP.getFloat("dStep", 1)));
+            sliderD.setStepSize(settingsSP.getFloat("dStep", 1));
         }
-        pTurnStep = findViewById(R.id.number_turn_P_step);
-        if (settingsSP.contains("pTurnStep")) {
-            pTurnStep.setText(String.valueOf(settingsSP.getFloat("pTurnStep", 1)));
-            sliderTurnP.setStepSize(settingsSP.getFloat("pTurnStep", 1));
+        maxPidMaxEdit = findViewById(R.id.number_max_max);
+        if (settingsSP.contains("maxPidMax")) {
+            maxPidMaxEdit.setText(String.valueOf(settingsSP.getInt("maxPidMax", 10)));
+            sliderPIDMax.setValueTo(settingsSP.getInt("maxPidMax", 10));
         }
-        iTurnStep = findViewById(R.id.number_turn_I_step);
-        if (settingsSP.contains("iTurnStep")) {
-            iTurnStep.setText(String.valueOf(settingsSP.getFloat("iTurnStep", 1)));
-            sliderTurnI.setStepSize(settingsSP.getFloat("iTurnStep", 1));
+        minPidMaxEdit = findViewById(R.id.number_min_max);
+        if (settingsSP.contains("minPidMax")) {
+            minPidMaxEdit.setText(String.valueOf(settingsSP.getInt("minPidMax", 10)));
+            sliderPIDMin.setValueTo(settingsSP.getInt("minPidMax", 10));
         }
-        dTurnStep = findViewById(R.id.number_turn_D_step);
-        if (settingsSP.contains("dTurnStep")) {
-            dTurnStep.setText(String.valueOf(settingsSP.getFloat("dTurnStep", 1)));
-            sliderTurnD.setStepSize(settingsSP.getFloat("dTurnStep", 1));
+        maxiPidMaxEdit = findViewById(R.id.number_maxi_max);
+        if (settingsSP.contains("maxiPidMax")) {
+            maxiPidMaxEdit.setText(String.valueOf(settingsSP.getInt("maxiPidMax", 10)));
+            sliderMaxI.setValueTo(settingsSP.getInt("maxiPidMax", 10));
+        }
+        maxPidMinEdit = findViewById(R.id.number_max_min);
+        if (settingsSP.contains("maxPidMin")) {
+            maxPidMinEdit.setText(String.valueOf(settingsSP.getInt("maxPidMin", 0)));
+            sliderPIDMax.setValueFrom(settingsSP.getInt("maxPidMin", 0));
+            sliderPIDMax.setValue(settingsSP.getInt("maxPidMin", 0));
+        }
+        minPidMinEdit = findViewById(R.id.number_min_min);
+        if (settingsSP.contains("minPidMin")) {
+            minPidMinEdit.setText(String.valueOf(settingsSP.getInt("minPidMin", 0)));
+            sliderPIDMin.setValueFrom(settingsSP.getInt("minPidMin", 0));
+            sliderPIDMin.setValue(settingsSP.getInt("minPidMin", 0));
+        }
+        maxiPidMinEdit = findViewById(R.id.number_maxi_min);
+        if (settingsSP.contains("maxiPidMin")) {
+            maxiPidMinEdit.setText(String.valueOf(settingsSP.getInt("maxiPidMin", 0)));
+            sliderMaxI.setValueFrom(settingsSP.getInt("maxiPidMin", 0));
+            sliderMaxI.setValue(settingsSP.getInt("maxiPidMin", 0));
+        }
+        maxPidStepEdit = findViewById(R.id.number_max_step);
+        if (settingsSP.contains("maxPidStep")) {
+            maxPidStepEdit.setText(String.valueOf(settingsSP.getFloat("maxPidStep", 1)));
+            sliderPIDMax.setStepSize(settingsSP.getFloat("maxPidStep", 1));
+        }
+        minPidStepEdit = findViewById(R.id.number_min_step);
+        if (settingsSP.contains("minPidStep")) {
+            minPidStepEdit.setText(String.valueOf(settingsSP.getFloat("minPidStep", 1)));
+            sliderPIDMin.setStepSize(settingsSP.getFloat("minPidStep", 1));
+        }
+        maxiPidStepEdit = findViewById(R.id.number_maxi_step);
+        if (settingsSP.contains("maxiPidStep")) {
+            maxiPidStepEdit.setText(String.valueOf(settingsSP.getFloat("maxiPidStep", 1)));
+            sliderMaxI.setStepSize(settingsSP.getFloat("maxiPidStep", 1));
         }
 
         layoutControls =findViewById(R.id.controlls);
@@ -897,111 +844,118 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onStopTrackingTouch(Slider slider) {
             if (slider.getId() == R.id.slider_speed){
-                String cmdText = "Speed:" + slider.getValue();
-                connectedThread.write(cmdText);
+                String cmdText = "Dist:" + slider.getValue();
+                sendData(cmdText);
             }
-            else if (slider.getId() == R.id.slider_speed_P){
+            else if (slider.getId() == R.id.slider_P){
                 String cmdText = "";
-                if (motorSwitchFront){
-                    cmdText = "Speed_P_F:" + slider.getValue();
+                switch (SwitchPID){
+                    case 0: {
+                        cmdText = "Speed_P_F:" + slider.getValue();
+                        textViewPSpeedF.setText(String.valueOf(slider.getValue()));
+                        break;
+                    }
+                    case 1: {
+                        cmdText = "Speed_P_B:" + slider.getValue();
+                        textViewPSpeedB.setText(String.valueOf(slider.getValue()));
+                        break;
+                    }
+                    case 2: {
+                        cmdText = "Turn_P:" + slider.getValue();
+                        textViewP.setText(String.valueOf(slider.getValue()));
+                        break;
+                    }
                 }
-                else {
-                    cmdText = "Speed_P_B:" + slider.getValue();
-                }
-                connectedThread.write(cmdText);
+                sendData(cmdText);
             }
-            else if (slider.getId() == R.id.slider_speed_I){
+            else if (slider.getId() == R.id.slider_I){
                 String cmdText = "";
-                if (motorSwitchFront){
-                    cmdText = "Speed_I_F:" + slider.getValue();
+                switch (SwitchPID){
+                    case 0: {
+                        cmdText = "Speed_I_F:" + slider.getValue();
+                        textViewISpeedF.setText(String.valueOf(slider.getValue()));
+                        break;
+                    }
+                    case 1: {
+                        cmdText = "Speed_I_B:" + slider.getValue();
+                        textViewISpeedB.setText(String.valueOf(slider.getValue()));
+                        break;
+                    }
+                    case 2: {
+                        cmdText = "Turn_I:" + slider.getValue();
+                        textViewI.setText(String.valueOf(slider.getValue()));
+                        break;
+                    }
                 }
-                else {
-                    cmdText = "Speed_I_B:" + slider.getValue();
-                }
-                connectedThread.write(cmdText);
+                sendData(cmdText);
             }
-            else if (slider.getId() == R.id.slider_speed_D){
+            else if (slider.getId() == R.id.slider_D){
                 String cmdText = "";
-                if (motorSwitchFront){
-                    cmdText = "Speed_D_F:" + slider.getValue();
+                switch (SwitchPID){
+                    case 0: {
+                        cmdText = "Speed_D_F:" + slider.getValue();
+                        textViewDSpeedF.setText(String.valueOf(slider.getValue()));
+                        break;
+                    }
+                    case 1: {
+                        cmdText = "Speed_D_B:" + slider.getValue();
+                        textViewDSpeedB.setText(String.valueOf(slider.getValue()));
+                        break;
+                    }
+                    case 2: {
+                        cmdText = "Turn_D:" + slider.getValue();
+                        textViewD.setText(String.valueOf(slider.getValue()));
+                        break;
+                    }
                 }
-                else {
-                    cmdText = "Speed_D_B:" + slider.getValue();
-                }
-                connectedThread.write(cmdText);
+                sendData(cmdText);
             }
-            else if (slider.getId() == R.id.slider_turn_P){
-                String cmdText = "Turn_P:" + slider.getValue();
-                textViewP.setText(String.valueOf(slider.getValue()));
-                connectedThread.write(cmdText);
+            else if (slider.getId() == R.id.slider_max){
+                String cmdText = "Max_Pid:" + slider.getValue();
+                //textViewISpeedF.setText(String.valueOf(slider.getValue()));
+                sendData(cmdText);
             }
-            else if (slider.getId() == R.id.slider_turn_I){
-                String cmdText = "Turn_I:" + slider.getValue();
-                textViewI.setText(String.valueOf(slider.getValue()));
-                connectedThread.write(cmdText);
+            else if (slider.getId() == R.id.slider_min){
+                String cmdText = "Min_Pid:" + slider.getValue();
+                //textViewISpeedF.setText(String.valueOf(slider.getValue()));
+                sendData(cmdText);
             }
-            else if (slider.getId() == R.id.slider_turn_D){
-                String cmdText = "Turn_D:" + slider.getValue();
-                textViewD.setText(String.valueOf(slider.getValue()));
-                connectedThread.write(cmdText);
+            else if (slider.getId() == R.id.slider_max_i){
+                String cmdText = "Max_I_Pid:" + slider.getValue();
+                //textViewISpeedF.setText(String.valueOf(slider.getValue()));
+                sendData(cmdText);
             }
         }
     };
 
     private final Slider.OnChangeListener changeListener =
             (slider, value, fromUser) -> {
-                if (slider.getId() == R.id.slider_speed_P){
+                /*if (slider.getId() == R.id.slider_P){
                     String cmdText = "Speed_P:" + slider.getValue();
-                    connectedThread.write(cmdText);
+                    sendData(cmdText);
                 }
-                else if (slider.getId() == R.id.slider_speed_I){
+                else if (slider.getId() == R.id.slider_I){
                     String cmdText = "Speed_I:" + slider.getValue();
-                    connectedThread.write(cmdText);
+                    sendData(cmdText);
                 }
                 else if (slider.getId() == R.id.slider_speed_D){
                     String cmdText = "Speed_D:" + slider.getValue();
-                    connectedThread.write(cmdText);
-                }
+                    sendData(cmdText);
+                }*/
 
             };
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSIONS_REQUEST_CODE.getCode()){
-            if (grantResults.length > 0 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED &&
-                    grantResults[1] == PackageManager.PERMISSION_GRANTED &&
-                    grantResults[2] == PackageManager.PERMISSION_GRANTED &&
-                    grantResults[3] == PackageManager.PERMISSION_GRANTED) {
-                // Permission is granted. Continue the action or workflow
-                // in your app.
-            } else {
-                // Explain to the user that the feature is unavailable because
-                // the feature requires a permission that the user has denied.
-                // At the same time, respect the user's decision. Don't link to
-                // system settings in an effort to convince the user to change
-                // their decision.
-            }
-        }
-        // Other 'case' lines to check for other
-        // permissions this app might request.
-    }
 
     @Override
     protected void onPause() {
         super.onPause();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     public void onResume() {
         super.onResume();
     }
 
-    /* ============================ Thread to Create Bluetooth Connection =================================== */
-
-
-    /* =============================== Thread for Data Transfer =========================================== */
     @Override
     public void onBackPressed() {
         // Terminate Bluetooth Connection and close app
@@ -1012,5 +966,155 @@ public class MainActivity extends AppCompatActivity {
         a.addCategory(Intent.CATEGORY_HOME);
         a.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(a);
+    }
+
+    public static List<String> hasPermissions(Context context, String[] permissions) {
+        List<String> missingPermissions = new ArrayList<>();
+        if (context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    missingPermissions.add(permission);
+                }
+            }
+        }
+        return missingPermissions;
+    }
+    
+    public void sendData(String msg){
+        if (isConnected){
+            connectedThread.write(msg);
+        }
+    }
+
+    private class BluetoothHandler extends Handler {
+        private final WeakReference<MainActivity> mActivity;
+
+        public BluetoothHandler(MainActivity activity){
+            mActivity = new WeakReference<>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            MainActivity activity = mActivity.get();
+            if (activity != null) {
+                if (msg.what == CONNECTING_STATUS.getCode()) {
+                    if (msg.arg1 == 1) {
+                        Log.e("Bluetooth", "in run connected");
+                        activity.toolbar.setSubtitle("Connected to " + deviceName);
+                        isConnected = true;
+                    } else if (msg.arg1 == -1) {
+                        toolbar.setSubtitle("Device fails to connect");
+                    }
+                    progressBar.setVisibility(View.GONE);
+                    buttonConnect.setEnabled(true);
+                } else if (msg.what == MESSAGE_READ.getCode()) {
+                    String arduinoMsg = msg.obj.toString();
+                    Log.d("BT MESSAGE", arduinoMsg);
+                    if (arduinoMsg.contains("PDC:")) {
+                        textViewTrackAngle.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("SpeedF:")) {
+                        textViewSpeedR.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("SpeedB:")) {
+                        textViewSpeedL.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("Time:")) {
+                        textViewMin.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("Error:")) {
+                        textViewMax.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    }
+                        /*else if (arduinoMsg.contains("Error:")){
+                            textViewStatus.setText(arduinoMsg.substring(arduinoMsg.indexOf(":")));
+                        }*/
+                    else if (arduinoMsg.contains("PF:")) {
+                        textViewPSpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("IF:")) {
+                        textViewISpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("DF:")) {
+                        textViewDSpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    }
+                    else if (arduinoMsg.contains("PB:")) {
+                        textViewPSpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("IB:")) {
+                        textViewISpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("DB:")) {
+                        textViewDSpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    }
+                    else if (arduinoMsg.contains("Turn_P:")) {
+                        textViewP.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("Turn_I:")) {
+                        textViewI.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("Turn_D:")) {
+                        textViewD.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("SpeedR:")) {
+                        //sliderSpeed.setValue(Float.parseFloat(arduinoMsg.substring(arduinoMsg.indexOf(":"))));
+                        textViewSpeedR.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("Status:")) {
+                        //sliderSpeed.setValue(Float.parseFloat(arduinoMsg.substring(arduinoMsg.indexOf(":"))));
+                        textViewStatus.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                    } else if (arduinoMsg.contains("data:")) {
+                        try {
+                            String data = arduinoMsg.substring(arduinoMsg.indexOf(":") + 1);
+                            ArrayList<ArrayList<Entry>> linePoints = new ArrayList<>();
+                            ArrayList<ArrayList<Entry>> radarPoints = new ArrayList<>();
+
+                            ArrayList<DataPoint[]> valueLinePoints = new ArrayList<>();
+                            ArrayList<DataPoint[]> valueRadarPoints = new ArrayList<>();
+
+                            ArrayList<String> datasets = new ArrayList<>(List.of(data.split("/")));
+                            int dataMode = 0;
+                            for (String dataset : datasets) {
+                                if (dataset.isEmpty()) {
+                                    break;
+                                }
+                                ArrayList<Entry> dataPointsLine = new ArrayList<>();
+                                ArrayList<Entry> dataPointsRadar = new ArrayList<>();
+                                ArrayList<String> points = new ArrayList<>(List.of(dataset.split(";")));
+
+                                DataPoint[] valuesLine = new DataPoint[points.size()];
+                                DataPoint[] valuesRadar = new DataPoint[points.size()];
+
+                                int counter = 0;
+                                for (String point : points) {
+                                    if (dataMode == 2 && viewSwitch == 2) {
+
+                                        float y = Float.parseFloat(point);
+                                        List<Float> transformedPoints = radarTransformer(y, degrees.get(counter));
+
+                                        DataPoint r = new DataPoint(transformedPoints.get(0), transformedPoints.get(1));
+                                        valuesRadar[counter] = r;
+                                    } else if (dataMode != 2 && viewSwitch == 1) {
+                                        float x = Float.parseFloat(point.split(",")[0]);
+                                        float y = Float.parseFloat(point.split(",")[1]);
+
+
+                                        DataPoint l = new DataPoint(x, y);
+                                        valuesLine[counter] = l;
+
+                                        Entry entryLine = new Entry(x, y);
+                                        dataPointsLine.add(entryLine);
+
+                                    }
+                                    counter++;
+                                }
+                                linePoints.add(dataPointsLine);
+
+                                if (dataMode == 2) {
+                                    valueRadarPoints.add(valuesRadar);
+                                }
+                                valueLinePoints.add(valuesLine);
+                                dataMode++;
+                            }
+                            if (viewSwitch == 1) {
+                                setUpChart(linePoints);
+                            } else {
+                                setUpGraph(valueLinePoints, valueRadarPoints);
+                            }
+
+                        } catch (Exception e) {
+
+                        }
+                    }
+                }
+            }
+        }
     }
 }
