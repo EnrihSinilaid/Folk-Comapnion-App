@@ -47,7 +47,7 @@ public class ConnectedThread extends Thread {
                 String readMessage;
                 if (buffer[bytes] == '\n'){
                     readMessage = new String(buffer,0,bytes);
-                    Log.e("Arduino Message",readMessage);
+                    //Log.e("Arduino Message",readMessage);
                     mmHandler.obtainMessage(MESSAGE_READ,readMessage).sendToTarget();
                     bytes = 0;
                 }

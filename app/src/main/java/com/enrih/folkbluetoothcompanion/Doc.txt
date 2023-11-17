@@ -1,30 +1,49 @@
 Sisse:
-    track:<string>
-    Angle:<string>
-    MinZone:<string>
-    MaxZone:<string>
-    Error:<string>
-    P:<string>
-    I:<string>
-    D:<string>
+    PF:<float> esirataste P kontroller
+    IF:<float> esirataste I kontroller
+    DF:<float> esirataste D kontroller
+    PB:<float> tagarataste P kontroller
+    IB:<float> tagarataste I kontroller
+    DB:<float> tagarataste D kontroller
+    Turn_P:<float> pööramise P kontroller
+    Turn_I:<float> pööramise I kontroller
+    Turn_D:<float> pööramise D kontroller
+    SpeedF:<string> esirataste kiirus hetkel
+    SpeedB:<string> tagarataste kiirus hetkel
+    Error:<string> mingi error data numbrid või is iganes
     Speed:<string>
-    Status:<string>
-    data:<string> format: data:x0,y0;x1,x1;.....;xn,yn/a0,b0;a1,b1;.....;an,bn/k0;k1;k2....k23
+    Status:<string> mingi status
+    data:<string> format: data:x0,y0;x1,x1;.....;xn,yn/a0,b0;a1,b1;.....;an,bn/k0;k1;k2....k20
 
 Välja:
     Käsud:
+        "syncData" -> käsk mille peale järjest saata erinevad PID väärtused nagu ülal defineeritud
         "off" -> Mootor sisse
         "on" -> Mootor välja
+        "dataOff" -> Data saatmine robot -> äpp välja
+        "dataOn" -> Data saatmine robot -> äpp sisse
+        "printOff" -> Data printimine (Serial, log) roboti siseselt välja
+        "printOn" -> Data printimine (Serial, log) roboti siseselt välja
         "startup" -> 5sek delay KIT-ga ja siis kõik tööle, võistluste jaoks
+        "startupL" -> 5sek delay KIT-ga Hoides kergelt vasakule ja siis kõik tööle, võistluste jaoks
+        "startupR" -> 5sek delay KIT-ga Hoides kergelt paremale ja siis kõik tööle, võistluste jaoks
         "SOff" -> Servo välja
         "SOn" -> Servo sisse
+        "Disconnect" -> robotile bluetooth ühenduse katkestamine viisakalt
 
     Parameetrid (float väärtused):
-        "Speed:" + slider.getValue();
-        "Speed_P:" + slider.getValue();
-        "Speed_I:" + slider.getValue();
-        "Speed_D:" + slider.getValue();
-        "Turn_P:" + slider.getValue();
-        "Turn_I:" + slider.getValue();
-        "Turn_D:" + slider.getValue();
+        "Dist:" + Slider väärtus -> Saab öelda kui kaugele peaksid sensorid vaatama
+        "Speed:" + slider.getValue(); -> Saab and max kiiruse millega sõita
+        "Speed_P_F:" + slider.getValue(); -> Esirataste P kontroller
+        "Speed_P_B:" + slider.getValue(); -> Tagarataste P kontroller
+        "Turn_P:" + slider.getValue(); -> Pööramise P kontroller
+        "Speed_I_F:" + slider.getValue(); -> Esirataste I kontroller
+        "Speed_I_B:" + slider.getValue(); -> Tagarataste I kontroller
+        "Turn_I:" + slider.getValue(); -> Pööramise I kontroller
+        "Speed_D_F:" + slider.getValue(); -> Esirataste D kontroller
+        "Speed_D_B:" + slider.getValue(); -> Tagarataste D kontroller
+        "Turn_D:" + slider.getValue(); -> Pööramise D kontroller
+        "Max_Pid:" + slider.getValue(); -> PID kontrolleri max clamp väärtus
+        "Min_Pid:" + slider.getValue(); -> PID kontrolleri min clamp väärtus
+        "Max_I_Pid:" + slider.getValue(); -> PID kontrolleri max I clamp väärtus
 

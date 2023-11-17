@@ -284,9 +284,9 @@ public class MainActivity extends AppCompatActivity {
                     editor.putFloat("iFSpeed", (sliderI.getValue()));
                     editor.putFloat("dFSpeed", (sliderD.getValue()));
                     editor.apply();
-                    sliderP.setValue(PIDValuesSP.getFloat("pBSpeed", settingsSP.getInt("pMin", 10)));
-                    sliderI.setValue(PIDValuesSP.getFloat("iBSpeed", settingsSP.getInt("iMin", 10)));
-                    sliderD.setValue(PIDValuesSP.getFloat("dBSpeed", settingsSP.getInt("dMin", 10)));
+                    sliderP.setValue(PIDValuesSP.getFloat("pBSpeed", settingsSP.getInt("pMin", 50)));
+                    sliderI.setValue(PIDValuesSP.getFloat("iBSpeed", settingsSP.getInt("iMin", 50)));
+                    sliderD.setValue(PIDValuesSP.getFloat("dBSpeed", settingsSP.getInt("dMin", 50)));
                     break;
                 }
                 case 1: {
@@ -296,9 +296,9 @@ public class MainActivity extends AppCompatActivity {
                     editor.putFloat("iBSpeed", (sliderI.getValue()));
                     editor.putFloat("dBSpeed", (sliderD.getValue()));
                     editor.apply();
-                    sliderP.setValue(PIDValuesSP.getFloat("pTurn", settingsSP.getInt("pMin", 10)));
-                    sliderI.setValue(PIDValuesSP.getFloat("iTurn", settingsSP.getInt("iMin", 10)));
-                    sliderD.setValue(PIDValuesSP.getFloat("dTurn", settingsSP.getInt("dMin", 10)));
+                    sliderP.setValue(PIDValuesSP.getFloat("pTurn", settingsSP.getInt("pMin", 50)));
+                    sliderI.setValue(PIDValuesSP.getFloat("iTurn", settingsSP.getInt("iMin", 50)));
+                    sliderD.setValue(PIDValuesSP.getFloat("dTurn", settingsSP.getInt("dMin", 50)));
                     break;
                 }
                 case 2:{
@@ -308,9 +308,9 @@ public class MainActivity extends AppCompatActivity {
                     editor.putFloat("iTurn", (sliderI.getValue()));
                     editor.putFloat("dTurn", (sliderD.getValue()));
                     editor.apply();
-                    sliderP.setValue(PIDValuesSP.getFloat("pFSpeed", settingsSP.getInt("pMin", 10)));
-                    sliderI.setValue(PIDValuesSP.getFloat("iFSpeed", settingsSP.getInt("iMin", 10)));
-                    sliderD.setValue(PIDValuesSP.getFloat("dFSpeed", settingsSP.getInt("dMin", 10)));
+                    sliderP.setValue(PIDValuesSP.getFloat("pFSpeed", settingsSP.getInt("pMin", 50)));
+                    sliderI.setValue(PIDValuesSP.getFloat("iFSpeed", settingsSP.getInt("iMin", 50)));
+                    sliderD.setValue(PIDValuesSP.getFloat("dFSpeed", settingsSP.getInt("dMin", 50)));
                     break;
                 }
             }
@@ -330,7 +330,7 @@ public class MainActivity extends AppCompatActivity {
 
         button6.setOnClickListener(view -> {
             if (createConnectThread != null){
-                String cmdText = "Disconnect\r\n";
+                String cmdText = "Disconnect";
                 sendData(cmdText);
                 createConnectThread.cancel();
                 toolbar.setSubtitle("Disconnected!");
@@ -631,18 +631,18 @@ public class MainActivity extends AppCompatActivity {
         /*EditText*/
         pMaxEdit = findViewById(R.id.number_P_max);
         if (settingsSP.contains("pMax")) {
-            pMaxEdit.setText(String.valueOf(settingsSP.getInt("pMax", 10)));
-            sliderP.setValueTo(settingsSP.getInt("pMax", 10));
+            pMaxEdit.setText(String.valueOf(settingsSP.getInt("pMax", 50)));
+            sliderP.setValueTo(settingsSP.getInt("pMax", 50));
         }
         iMaxEdit = findViewById(R.id.number_I_max);
         if (settingsSP.contains("iMax")) {
-            iMaxEdit.setText(String.valueOf(settingsSP.getInt("iMax", 10)));
-            sliderI.setValueTo(settingsSP.getInt("iMax", 10));
+            iMaxEdit.setText(String.valueOf(settingsSP.getInt("iMax", 50)));
+            sliderI.setValueTo(settingsSP.getInt("iMax", 50));
         }
         dMaxEdit = findViewById(R.id.number_D_max);
         if (settingsSP.contains("dMax")) {
-            dMaxEdit.setText(String.valueOf(settingsSP.getInt("dMax", 10)));
-            sliderD.setValueTo(settingsSP.getInt("dMax", 10));
+            dMaxEdit.setText(String.valueOf(settingsSP.getInt("dMax", 50)));
+            sliderD.setValueTo(settingsSP.getInt("dMax", 50));
         }
         pMinEdit = findViewById(R.id.number_P_min);
         if (settingsSP.contains("pMin")) {
@@ -679,18 +679,18 @@ public class MainActivity extends AppCompatActivity {
         }
         maxPidMaxEdit = findViewById(R.id.number_max_max);
         if (settingsSP.contains("maxPidMax")) {
-            maxPidMaxEdit.setText(String.valueOf(settingsSP.getInt("maxPidMax", 10)));
-            sliderPIDMax.setValueTo(settingsSP.getInt("maxPidMax", 10));
+            maxPidMaxEdit.setText(String.valueOf(settingsSP.getInt("maxPidMax", 50)));
+            sliderPIDMax.setValueTo(settingsSP.getInt("maxPidMax", 50));
         }
         minPidMaxEdit = findViewById(R.id.number_min_max);
         if (settingsSP.contains("minPidMax")) {
-            minPidMaxEdit.setText(String.valueOf(settingsSP.getInt("minPidMax", 10)));
-            sliderPIDMin.setValueTo(settingsSP.getInt("minPidMax", 10));
+            minPidMaxEdit.setText(String.valueOf(settingsSP.getInt("minPidMax", 50)));
+            sliderPIDMin.setValueTo(settingsSP.getInt("minPidMax", 50));
         }
         maxiPidMaxEdit = findViewById(R.id.number_maxi_max);
         if (settingsSP.contains("maxiPidMax")) {
-            maxiPidMaxEdit.setText(String.valueOf(settingsSP.getInt("maxiPidMax", 10)));
-            sliderMaxI.setValueTo(settingsSP.getInt("maxiPidMax", 10));
+            maxiPidMaxEdit.setText(String.valueOf(settingsSP.getInt("maxiPidMax", 50)));
+            sliderMaxI.setValueTo(settingsSP.getInt("maxiPidMax", 50));
         }
         maxPidMinEdit = findViewById(R.id.number_max_min);
         if (settingsSP.contains("maxPidMin")) {
@@ -1002,6 +1002,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.e("Bluetooth", "in run connected");
                         activity.toolbar.setSubtitle("Connected to " + deviceName);
                         isConnected = true;
+                        sendData("syncData");
                     } else if (msg.arg1 == -1) {
                         toolbar.setSubtitle("Device fails to connect");
                     }
@@ -1026,24 +1027,78 @@ public class MainActivity extends AppCompatActivity {
                         }*/
                     else if (arduinoMsg.contains("PF:")) {
                         textViewPSpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                        SharedPreferences.Editor editor = PIDValuesSP.edit();
+                        editor.putFloat("pFSpeed", (Float.parseFloat((String) textViewPSpeedF.getText())));
+                        editor.apply();
+                        if (SwitchPID == 0){
+                            sliderP.setValue(Float.parseFloat((String) textViewPSpeedF.getText()));
+                        }
                     } else if (arduinoMsg.contains("IF:")) {
                         textViewISpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                        SharedPreferences.Editor editor = PIDValuesSP.edit();
+                        editor.putFloat("iFSpeed", (Float.parseFloat((String) textViewISpeedF.getText())));
+                        editor.apply();
+                        if (SwitchPID == 0){
+                            sliderI.setValue(Float.parseFloat((String) textViewISpeedF.getText()));
+                        }
                     } else if (arduinoMsg.contains("DF:")) {
                         textViewDSpeedF.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                        SharedPreferences.Editor editor = PIDValuesSP.edit();
+                        editor.putFloat("dFSpeed", (Float.parseFloat((String) textViewDSpeedF.getText())));
+                        editor.apply();
+                        if (SwitchPID == 0){
+                            sliderD.setValue(Float.parseFloat((String) textViewDSpeedF.getText()));
+                        }
                     }
                     else if (arduinoMsg.contains("PB:")) {
                         textViewPSpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                        SharedPreferences.Editor editor = PIDValuesSP.edit();
+                        editor.putFloat("pBSpeed", (Float.parseFloat((String) textViewPSpeedB.getText())));
+                        editor.apply();
+                        if (SwitchPID == 1){
+                            sliderP.setValue(Float.parseFloat((String) textViewPSpeedB.getText()));
+                        }
                     } else if (arduinoMsg.contains("IB:")) {
                         textViewISpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                        SharedPreferences.Editor editor = PIDValuesSP.edit();
+                        editor.putFloat("iBSpeed", (Float.parseFloat((String) textViewISpeedB.getText())));
+                        editor.apply();
+                        if (SwitchPID == 1){
+                            sliderI.setValue(Float.parseFloat((String) textViewISpeedB.getText()));
+                        }
                     } else if (arduinoMsg.contains("DB:")) {
                         textViewDSpeedB.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                        SharedPreferences.Editor editor = PIDValuesSP.edit();
+                        editor.putFloat("dBSpeed", (Float.parseFloat((String) textViewDSpeedB.getText())));
+                        editor.apply();
+                        if (SwitchPID == 1){
+                            sliderD.setValue(Float.parseFloat((String) textViewDSpeedB.getText()));
+                        }
                     }
                     else if (arduinoMsg.contains("Turn_P:")) {
                         textViewP.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                        SharedPreferences.Editor editor = PIDValuesSP.edit();
+                        editor.putFloat("pTurn", (Float.parseFloat((String) textViewP.getText())));
+                        editor.apply();
+                        if (SwitchPID == 2){
+                            sliderP.setValue(Float.parseFloat((String) textViewP.getText()));
+                        }
                     } else if (arduinoMsg.contains("Turn_I:")) {
                         textViewI.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                        SharedPreferences.Editor editor = PIDValuesSP.edit();
+                        editor.putFloat("iTurn", (Float.parseFloat((String) textViewI.getText())));
+                        editor.apply();
+                        if (SwitchPID == 2){
+                            sliderI.setValue(Float.parseFloat((String) textViewI.getText()));
+                        }
                     } else if (arduinoMsg.contains("Turn_D:")) {
                         textViewD.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
+                        SharedPreferences.Editor editor = PIDValuesSP.edit();
+                        editor.putFloat("dTurn", (Float.parseFloat((String) textViewD.getText())));
+                        editor.apply();
+                        if (SwitchPID == 2){
+                            sliderD.setValue(Float.parseFloat((String) textViewD.getText()));
+                        }
                     } else if (arduinoMsg.contains("SpeedR:")) {
                         //sliderSpeed.setValue(Float.parseFloat(arduinoMsg.substring(arduinoMsg.indexOf(":"))));
                         textViewSpeedR.setText(arduinoMsg.substring(arduinoMsg.indexOf(":") + 1));
